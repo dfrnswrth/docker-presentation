@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Docker</title>
+  <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+  <meta name="author" content="DF">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="css/reveal.min.css">
+  <link rel="stylesheet" href="css/theme/default.css" id="theme">
+  <link rel="stylesheet" href="lib/css/zenburn.css">
+  <script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = 'css/print/pdf.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+  </script>
+</head>
+
+<body>
+<div class="reveal">
+<!-- Any section element inside of this container is displayed as a slide -->
+<div class="slides">
+
+<section data-markdown>
+<script type="text/template">
+# Docker
+</script>
+</section>
+
+
+<section>
+<section data-markdown><script type="text/template">
+## What is Docker?
+
+* LXC (linux containers, namespacing, cgroups) <!-- .element: class="fragment" data-fragment-index="1" -->
+* lightweight, portable runtime engine & packaging tool <!-- .element: class="fragment" data-fragment-index="2" -->
+* kinda like Git for Deployment <!-- .element: class="fragment" data-fragment-index="3" -->
+* ...but it also makes a wicked development environment <!-- .element: class="fragment" data-fragment-index="4" -->
+</script></section>
+
+<section data-markdown><script type="text/template">
+## For Developers
+
+> "Docker helps developers build and ship higher-quality applications, faster"
+
+* a way to share your development environment <!-- .element: class="fragment" data-fragment-index="1" -->
+* ability to deploy exact application state  <!-- .element: class="fragment" data-fragment-index="2" -->
+  * (not just the state of the code) <!-- .element: class="fragment" data-fragment-index="3" -->
+* a huge time saver <!-- .element: class="fragment" data-fragment-index="4" -->
+</script></section>
+
+<section data-markdown><script type="text/template">
+## For IT / Ops
+
+> "Docker helps sysadmins deploy and run any app on any infrastructure, quickly and reliably." 
+
+* the elimination of OS differences <!-- .element: class="fragment" data-fragment-index="1" -->
+* sandboxed application environments <!-- .element: class="fragment" data-fragment-index="2" -->
+* a huge time saver <!-- .element: class="fragment" data-fragment-index="3" -->
+</script></section>
+</section>
+
+<section>
+<section data-markdown><script type="text/template">
+## Docker is also...
+
+* A registry of shared images allowing rapid application setup.
+  * https://registry.hub.docker.com/
+
+* A collection of trusted dockerfiles for same
+  * http://dockerfile.github.io/
+</script>
+</section>
+
+<section data-markdown><script type="text/template">
+## Docker is Not
+# A Virtual Machine
+</script>
+</section>
+</section>
+
+
+
+<section data-markdown>
+<script type="text/template">
+# Details
+</script>
+</section>
+
+
+
+
+
+<section>
+<section data-markdown><script type="text/template">
+## Images
+
+* read-only template
+* layered / composable
+* the basis for containers
+* created from a Dockerfile
+</script></section>
+
+<section data-markdown><script type="text/template">
+## Dockerfiles describe Images
+
+```bash
+FROM ubuntu:15.04
+
+RUN apt-get update -y
+RUN apt-get install -y all the dependencies
+
+ADD . /my/app/dir
+WORKDIR /my/app/dir
+
+EXPOSE 80 #
+CMD ["run", "the", "damn", "app"]
+```
+</script></section>
+<section data-markdown><script type="text/template">
+## Images are Composable
+
+```bash
+# Dockerfile
+FROM ubuntu:15.04
+RUN apt-get update -y
+RUN apt-get install -y nodejs
+RUN npm install -g grunt-cli nodemon
+```
+
+```bash
+docker build -t dfrnswrth/ubuntu-node-base .
+```
+
+```bash
+# another Dockerfile
+FROM dfrnswrth/ubuntu-node-base
+
+ADD . /my/app/dir
+WORKDIR /my/app/dir
+
+RUN npm install
+
+EXPOSE 80
+CMD ["run", "the", "damn", "app"]
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```bash
+docker build -t dfrnswrth/myapp .
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+</script></section>
+
+<section data-markdown><script type="text/template">
+## Dockerfiles can be used for multiple images
+
+```bash
+# ~/src/app-1
+docker build -t dfrnswrth/myapp .
+```
+
+```bash
+# ~/src/another-different-app
+docker build -t dfrnswrth/different-app .
+```
+</script></section>
+<section data-markdown><script type="text/template">
+## Images allow Environment Composition
+
+* base image used by team
+* dev / test / prod parity
+</script></section>
+</section>
+
+
+
+<section>
+<section data-markdown><script type="text/template">
+## Containers
+* created from images
+* interactive (fg) or daemonized (bg)
+</script></section>
+<section data-markdown><script type="text/template">
+## Running a Container
+
+### Interactive / Debug
+```bash
+# run the container w/ shell
+docker run -t -i dfrnswrth/myapp /bin/bash
+```
+
+### Daemonized
+```bash
+# run container w/ default command (`CMD` in dockerfile)
+docker run -d dfrnswrth/myapp
+```
+</script></section>
+<section data-markdown><script type="text/template">
+## Networking Containers
+
+### Expose Ports
+```bash
+# --port <HOST>:<CONTAINER>
+docker run -d -p 5678:80 dfrnswrth/myapp
+```
+
+### Link Containers
+```bash
+# --link <NAME or ID>:<ALIAS>
+docker run -d --link some-db-container:mysql dfrnswrth/myapp
+```
+</script></section>
+<section data-markdown><script type="text/template">
+## Sharing Volumes
+
+```bash
+# --volume <HOST>:<CONTAINER>
+docker run -d -v `pwd`/app:/my/app/dir dfrnswrth/myapp
+```
+</script></section>
+</section>
+
+
+
+
+<section>
+<section data-markdown><script type="text/template">
+## Deploying With
+# Fleet
+
+* distributed init system of systemd and etcd
+* kinda like supervisor for Docker containers
+</script></section>
+<section data-markdown><script type="text/template">
+## Creating Units
+
+Service Files
+```bash
+[Unit]
+After=docker.service
+
+[Service]
+Restart=on-failure
+ExecStartPre=-/bin/docker kill %p
+ExecStartPre=-/bin/docker rm %p
+ExecStartPre=/usr/bin/docker pull dfrnswrth/myapp
+ExecStart=/usr/bin/docker run --name=%p dfrnswrth/myapp
+ExecStartPost=/bin/pipework br16 myapp1 123.123.123.123/12@123.123.123.123
+
+[X-Fleet]
+X-Conflicts=www.myapp.com.*.service
+```
+</script></section>
+<section data-markdown><script type="text/template">
+## Deploying
+
+```bash
+$ fleetctl load myapp1
+$ fleetctl start myapp1
+```
+</script></section>
+<section data-markdown><script type="text/template">
+## Status
+
+```bash
+$ fleetctl list-units
+UNIT              MACHINE                     ACTIVE  SUB
+myapp1.service    30a73182.../172.17.1.234    active  running
+badapp.service    610a163d.../172.17.8.101    failed  failed
+```
+</script></section>
+</section>
+
+
+<section data-markdown><script type="text/template">
+## The End
+# Thanks!
+
+* dylan@far.nsworth.com
+* @dfrnsworth
+</script></section>
+
+</div>
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.min.js"></script>
+
+<script>
+
+  // Full list of configuration options available here:
+  // https://github.com/hakimel/reveal.js#configuration
+  Reveal.initialize({
+    controls: true,
+    progress: true,
+    history: true,
+    center: true,
+
+    theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+    transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+    // Parallax scrolling
+    // parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+    // parallaxBackgroundSize: '2100px 900px',
+
+    // Optional libraries used to extend on reveal.js
+    dependencies: [
+      { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+      { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+    ]
+  });
+
+</script>
+
+</body>
+</html>
